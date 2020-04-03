@@ -7,12 +7,11 @@ import org.apache.spark.{SparkConf, SparkContext}
 
 object Runner extends App {
 
-  System.setProperty("hadoop.home.dir", "F:\\work\\!ML\\spark\\hadoop_winutils")
-  Logger.getLogger("org").setLevel(Level.OFF)
+  System.setProperty("hadoop.home.dir", "hadoop/bin/winutils.exe")
   Logger.getLogger("akka").setLevel(Level.OFF)
+  Logger.getLogger("org").setLevel(Level.OFF)
 
-  val fileName = "C:\\Users\\Alex\\IdeaProjects\\sparker\\src\\main\\resources\\1984.txt"
-  //String word = "боль"
+  val fileName = "src/main/resources/1984.txt"
   val config = new SparkConf()
   config.setAppName("my spark core")
   config.setMaster("local[*]")
@@ -21,14 +20,27 @@ object Runner extends App {
   val data: RDD[String] = sc.textFile(fileName)
   val words = data
     .flatMap(w => w
-      //.replaceAll(","," ")
-      //.replaceAll("."," ")
+      .replace(","," ")
+      .replace("."," ")
       .split(" "))
     .persist(StorageLevel.MEMORY_ONLY)
 
-  var word: String = "Язык"
+  def findStartWith(words: RDD[String], word: String) = {
+    println(word + ": " + words.filter(w => w.startsWith(word)).count())
+  }
 
-  val countW = words.filter(w => w.startsWith("язык"))
-  println(word + ": " + countW.count())
+  def findCompareToIgnoreCase(words: RDD[String], word: String) = {
+    println(word + ": " + words.filter(w => w.compareToIgnoreCase(word) == 0).count())
+  }
 
+  findStartWith(words, "О’Брайен")
+  findStartWith(words, "Джулия")
+  findStartWith(words, "Смит")
+
+  findCompareToIgnoreCase(words, "министерство")
+  findCompareToIgnoreCase(words, "война")
+  findCompareToIgnoreCase(words, "время")
+
+  //For jobs monitoring on http://localhost:4040/jobs
+  //Thread.sleep(9999999999999L)
 }
